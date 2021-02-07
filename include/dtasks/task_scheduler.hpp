@@ -85,7 +85,7 @@ class task_scheduler : public task_queue {
 	std::atomic<bool> m_work;
 	std::atomic<stage_id::type> m_next_stage;
 	kt::kthread m_thread;
-	mutable kt::lockable<> m_mutex;
+	mutable kt::lockable_t<> m_mutex;
 };
 
 // impl

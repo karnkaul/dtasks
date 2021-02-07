@@ -88,7 +88,7 @@ class task_queue {
 	template <typename K>
 	struct status_map {
 		std::unordered_map<K, status_t> map;
-		mutable kt::lockable<std::shared_mutex> mutex;
+		mutable kt::lockable_t<std::shared_mutex> mutex;
 
 		void set(K key, status_t value);
 		status_t get(K key) const;
