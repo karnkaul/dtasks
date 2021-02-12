@@ -68,6 +68,10 @@ task_scheduler::status_t task_scheduler::stage_status(stage_id id) const {
 	return m_stage_status.get(id.id);
 }
 
+bool task_scheduler::stage_done(stage_id id) const {
+	return stage_status(id) == status_t::done;
+}
+
 bool task_scheduler::wait(stage_id id) {
 	if (id.id == 0 || id.id > m_next_stage.load()) {
 		return false;

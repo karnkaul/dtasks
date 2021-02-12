@@ -63,6 +63,10 @@ task_queue::status_t task_queue::task_status(task_id id) const {
 	return m_status.get(id.id);
 }
 
+bool task_queue::task_done(task_id id) const {
+	return task_status(id) == status_t::done;
+}
+
 bool task_queue::wait(task_id id) {
 	if (id.id == 0 || id.id > m_next_task.load()) {
 		return false;

@@ -70,6 +70,10 @@ class task_queue {
 	///
 	status_t task_status(task_id id) const;
 	///
+	/// \brief Check if stage_t identified by id is done
+	///
+	bool task_done(task_id id) const;
+	///
 	/// \brief Wait for task_t identified by id to complete (or throw); blocks calling thread
 	///
 	bool wait(task_id id);

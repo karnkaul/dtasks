@@ -56,6 +56,10 @@ class task_scheduler : public task_queue {
 	///
 	status_t stage_status(stage_id id) const;
 	///
+	/// \brief Check if stage_t identified by id is done
+	///
+	bool stage_done(stage_id id) const;
+	///
 	/// \brief Wait for stage_t identified by id to complete (or throw); blocks calling thread
 	///
 	bool wait(stage_id id);
