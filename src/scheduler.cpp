@@ -1,10 +1,10 @@
 #include <algorithm>
-#include <dtasks/task_scheduler.hpp>
+#include <dumb_tasks/scheduler.hpp>
 
 namespace dts {
 using namespace std::chrono_literals;
 
-task_scheduler::task_scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
+scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
 	m_work.store(true);
 	m_next_stage.store(0);
 	m_thread = kt::kthread([this]() {
@@ -40,12 +40,12 @@ task_scheduler::task_scheduler(std::uint8_t worker_count) : task_queue(worker_co
 	});
 }
 
-task_scheduler::~task_scheduler() {
+scheduler::~scheduler() {
 	m_work.store(false);
 	m_thread = {};
 }
 
-task_scheduler::stage_id task_scheduler::stage(stage_t&& stage) {
+scheduler::stage_id scheduler::stage(stage_t&& stage) {
 	stage_entry_t entry;
 	entry.id.id = ++m_next_stage;
 	entry.tasks = std::move(stage.tasks);
@@ -57,29 +57,29 @@ task_scheduler::stage_id task_scheduler::stage(stage_t&& stage) {
 	return ret;
 }
 
-task_scheduler::stage_id task_scheduler::stage(stage_t const& stage) {
+scheduler::stage_id scheduler::stage(stage_t const& stage) {
 	return this->stage(stage_t(stage));
 }
 
-task_scheduler::status_t task_scheduler::stage_status(stage_id id) const {
+scheduler::status_t scheduler::stage_status(stage_id id) const {
 	if (id.id == 0 || id.id > m_next_stage.load()) {
 		return status_t::unknown;
 	}
 	return m_stage_status.get(id.id);
 }
 
-bool task_scheduler::stage_done(stage_id id) const {
+bool scheduler::stage_done(stage_id id) const {
 	return stage_status(id) == status_t::done;
 }
 
-bool task_scheduler::wait(stage_id id) {
+bool scheduler::wait(stage_id id) {
 	if (id.id == 0 || id.id > m_next_stage.load()) {
 		return false;
 	}
 	return m_stage_status.wait(id.id);
 }
 
-void task_scheduler::clear() {
+void scheduler::clear() {
 	auto lock = m_mutex.lock();
 	for (auto const& stage : m_waiting) {
 		m_stage_status.set(stage.id.id, status_t::unknown);

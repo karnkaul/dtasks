@@ -74,6 +74,11 @@ class task_queue {
 	///
 	bool task_done(task_id id) const;
 	///
+	/// \brief Check if all stages in container are done
+	///
+	template <typename C>
+	bool tasks_done(C const& container) const;
+	///
 	/// \brief Wait for task_t identified by id to complete (or throw); blocks calling thread
 	///
 	bool wait(task_id id);
@@ -81,7 +86,7 @@ class task_queue {
 	/// \brief Wait for container of task_id to complete (or throw); blocks calling thread
 	///
 	template <typename C>
-	void wait_tasks(C&& container);
+	void wait_tasks(C const& container);
 	///
 	/// \brief Wait for queue to drain and all workers to be idle
 	/// Warning: do not enqueue tasks (on other threads) while blocked on this call!
@@ -171,7 +176,12 @@ std::vector<task_id> task_queue::enqueue_all(C&& container) {
 	return ret;
 }
 template <typename C>
-void task_queue::wait_tasks(C&& container) {
+bool task_queue::tasks_done(C const& container) const {
+	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, task_id>, "Invalid type");
+	return std::all_of(std::begin(container), std::end(container), [this](auto id) { return task_done(id); });
+}
+template <typename C>
+void task_queue::wait_tasks(C const& container) {
 	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, task_id>, "Invalid type");
 	for (auto const& id : container) {
 		wait(id);

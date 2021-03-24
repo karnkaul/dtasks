@@ -1,12 +1,12 @@
 #pragma once
 #include <list>
-#include <dtasks/task_queue.hpp>
+#include <dumb_tasks/task_queue.hpp>
 
 namespace dts {
 ///
 /// \brief Task scheduler: enqueues batches of tasks with dependencies
 ///
-class task_scheduler : public task_queue {
+class scheduler : public task_queue {
   public:
 	using task_queue::status_t;
 	using task_queue::task_t;
@@ -32,11 +32,11 @@ class task_scheduler : public task_queue {
 	/// \brief Constructor
 	/// \param worker_count Number of threads and workers to create (min 1)
 	///
-	explicit task_scheduler(std::uint8_t worker_count = 4);
+	explicit scheduler(std::uint8_t worker_count = 4);
 	///
 	/// \brief Destructor
 	///
-	~task_scheduler() override;
+	~scheduler() override;
 
 	///
 	/// \brief Stage a batch of tasks
@@ -59,6 +59,11 @@ class task_scheduler : public task_queue {
 	/// \brief Check if stage_t identified by id is done
 	///
 	bool stage_done(stage_id id) const;
+	///
+	/// \brief Check if all stages in container are done
+	///
+	template <typename C>
+	bool stages_done(C const& container) const;
 	///
 	/// \brief Wait for stage_t identified by id to complete (or throw); blocks calling thread
 	///
@@ -95,7 +100,12 @@ class task_scheduler : public task_queue {
 // impl
 
 template <typename C>
-void task_scheduler::wait_stages(C&& container) {
+bool scheduler::stages_done(C const& container) const {
+	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, stage_id>, "Invalid type");
+	return std::all_of(std::begin(container), std::end(container), [this](auto id) { return stage_done(id); });
+}
+template <typename C>
+void scheduler::wait_stages(C&& container) {
 	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, stage_id>, "Invalid type");
 	for (auto const& id : container) {
 		wait(id);

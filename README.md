@@ -31,20 +31,20 @@ This is a "dumb simple" multi-threaded task runner and scheduler library.
 
 1. Clone repo to appropriate subdirectory, say `dumb_tasks`
 1. Add library to project via: `add_subdirectory(dumb_tasks)` and `target_link_libraries(foo dtasks::dtasks)`
-1. Use via: `#include <dumb_tasks/task_scheduler.hpp>` or `#include <dumb_tasks/task_queue.hpp>` (if scheduling / dependencies are not needed)
+1. Use via: `#include <dumb_tasks/scheduler.hpp>` or `#include <dumb_tasks/task_queue.hpp>` (if scheduling / dependencies are not needed)
 
 **Example**
 
 `dts::task_queue` is a flat async queue of tasks which are consumed by a fixed number of worker threads.
 
-`dts::task_scheduler` derives from `dts::task_queue` and provides the ability to enqueue batches of tasks in a "stage", with optional dependencies (as obtained `stage_id`s). A staged batch of tasks waits for all its dependencies to be in the `done` (or `error`) state(s), and is then added to the task queue.
+`dts::scheduler` derives from `dts::task_queue` and provides the ability to enqueue batches of tasks in a "stage", with optional dependencies (as obtained `stage_id`s). A staged batch of tasks waits for all its dependencies to be in the `done` (or `error`) state(s), and is then added to the task queue.
 
 ```cpp
 #include <array>
 #include <chrono>
 #include <random>
 #include <dumb_tasks/task_queue.hpp>
-#include <dumb_tasks/task_scheduler.hpp>
+#include <dumb_tasks/scheduler.hpp>
 
 using namespace std::chrono;
 
@@ -69,10 +69,10 @@ int main() {
   }
   {
     // task scheduler
-    dts::task_scheduler scheduler;
-    std::array<dts::task_scheduler::stage_id, 4> ids;
+    dts::scheduler scheduler;
+    std::array<dts::scheduler::stage_id, 4> ids;
     for (std::size_t i = 0; i < 4; ++i) {
-      dts::task_scheduler::stage_t stage;
+      dts::scheduler::stage_t stage;
       for (std::size_t j = 0; j < 4; ++j) {
         stage.tasks.push_back([i, j, &foo]() { foo(5 * i + j); });
       }

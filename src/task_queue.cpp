@@ -1,6 +1,6 @@
 #include <algorithm>
-#include <dtasks/error_handler.hpp>
-#include <dtasks/task_queue.hpp>
+#include <dumb_tasks/error_handler.hpp>
+#include <dumb_tasks/task_queue.hpp>
 
 namespace dts {
 task_queue::worker::worker(task_status_t& status, kt::async_queue<task_entry_t>& queue) {

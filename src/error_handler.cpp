@@ -1,5 +1,5 @@
 #include <iostream>
-#include <dtasks/error_handler.hpp>
+#include <dumb_tasks/error_handler.hpp>
 
 namespace dts {
 void error_handler_t::operator()(std::runtime_error const& err, std::uint64_t task_id) const {
