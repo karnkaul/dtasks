@@ -4,6 +4,7 @@
 #include <functional>
 #include <shared_mutex>
 #include <unordered_map>
+#include <vector>
 #include <kt/async_queue/async_queue.hpp>
 #include <kt/kthread/kthread.hpp>
 
