@@ -107,8 +107,6 @@ bool scheduler::stages_done(C const& container) const {
 template <typename C>
 void scheduler::wait_stages(C&& container) {
 	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, stage_id>, "Invalid type");
-	for (auto const& id : container) {
-		wait(id);
-	}
+	for (auto const& id : container) { wait(id); }
 }
 } // namespace dts

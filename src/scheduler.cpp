@@ -26,9 +26,7 @@ scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
 				it->deps.erase(iter, it->deps.end());
 				if (it->deps.empty()) {
 					m_stage_status.set(it->id.id, status_t::executing);
-					for (auto const& task : it->tasks) {
-						it->ids.push_back(enqueue(task));
-					}
+					for (auto const& task : it->tasks) { it->ids.push_back(enqueue(task)); }
 					it->tasks.clear();
 					m_running.push_back(std::move(*it));
 					it = m_waiting.erase(it);
@@ -57,33 +55,23 @@ scheduler::stage_id scheduler::stage(stage_t&& stage) {
 	return ret;
 }
 
-scheduler::stage_id scheduler::stage(stage_t const& stage) {
-	return this->stage(stage_t(stage));
-}
+scheduler::stage_id scheduler::stage(stage_t const& stage) { return this->stage(stage_t(stage)); }
 
 scheduler::status_t scheduler::stage_status(stage_id id) const {
-	if (id.id == 0 || id.id > m_next_stage.load()) {
-		return status_t::unknown;
-	}
+	if (id.id == 0 || id.id > m_next_stage.load()) { return status_t::unknown; }
 	return m_stage_status.get(id.id);
 }
 
-bool scheduler::stage_done(stage_id id) const {
-	return stage_status(id) == status_t::done;
-}
+bool scheduler::stage_done(stage_id id) const { return stage_status(id) == status_t::done; }
 
 bool scheduler::wait(stage_id id) {
-	if (id.id == 0 || id.id > m_next_stage.load()) {
-		return false;
-	}
+	if (id.id == 0 || id.id > m_next_stage.load()) { return false; }
 	return m_stage_status.wait(id.id);
 }
 
 void scheduler::clear() {
 	auto lock = m_mutex.lock();
-	for (auto const& stage : m_waiting) {
-		m_stage_status.set(stage.id.id, status_t::unknown);
-	}
+	for (auto const& stage : m_waiting) { m_stage_status.set(stage.id.id, status_t::unknown); }
 	m_waiting.clear();
 }
 } // namespace dts

@@ -140,9 +140,7 @@ void task_queue::status_map<K>::set(K key, status_t value) {
 template <typename K>
 task_queue::status_t task_queue::status_map<K>::get(K key) const {
 	auto lock = mutex.lock<std::shared_lock>();
-	if (auto it = map.find(key); it != map.end()) {
-		return it->second;
-	}
+	if (auto it = map.find(key); it != map.end()) { return it->second; }
 	return status_t::done;
 }
 template <typename K>
@@ -184,8 +182,6 @@ bool task_queue::tasks_done(C const& container) const {
 template <typename C>
 void task_queue::wait_tasks(C const& container) {
 	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, task_id>, "Invalid type");
-	for (auto const& id : container) {
-		wait(id);
-	}
+	for (auto const& id : container) { wait(id); }
 }
 } // namespace dts
