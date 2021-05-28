@@ -33,13 +33,9 @@ target_compile_definitions(dtasks PUBLIC $<$<BOOL:${DTASKS_CATCH_RUNTIME_ERRORS}
 target_compile_features(dtasks PUBLIC cxx_std_17)
 target_include_directories(dtasks PUBLIC include)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	target_compile_options(dtasks PRIVATE -fPIC)
-endif()
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 	target_compile_options(dtasks PRIVATE /MP)
 endif()
-
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(dtasks PRIVATE -Wextra -Wall -Werror=return-type $<$<NOT:$<CONFIG:Debug>>:-Werror>)
 endif()
