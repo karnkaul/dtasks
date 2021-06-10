@@ -33,10 +33,6 @@ class scheduler : public task_queue {
 	/// \param worker_count Number of threads and workers to create (min 1)
 	///
 	explicit scheduler(std::uint8_t worker_count = 4);
-	///
-	/// \brief Destructor
-	///
-	~scheduler() override;
 
 	///
 	/// \brief Stage a batch of tasks
@@ -91,7 +87,6 @@ class scheduler : public task_queue {
 	stage_status_t m_stage_status;
 	std::list<stage_entry_t> m_waiting;
 	std::list<stage_entry_t> m_running;
-	std::atomic<bool> m_work;
 	std::atomic<stage_id::type> m_next_stage;
 	kt::kthread m_thread;
 	mutable kt::lockable_t<> m_mutex;

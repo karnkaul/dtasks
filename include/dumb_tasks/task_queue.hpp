@@ -108,22 +108,23 @@ class task_queue {
   private:
 	using task_entry_t = std::pair<task_id, task_t>;
 	using task_status_t = status_map<task_id::type>;
+	using queue_t = kt::async_queue<task_entry_t>;
 
 	struct worker {
 		kt::kthread thread;
 
-		worker(task_status_t& status, kt::async_queue<task_entry_t>& queue);
+		worker(task_status_t* status, queue_t* queue);
 
-		static void run(task_status_t& status, task_entry_t const& entry);
-		static void error(task_status_t& status, task_entry_t const& entry, std::runtime_error const& err);
+		static void run(task_status_t& out_status, task_entry_t const& entry);
+		static void error(task_status_t& out_status, task_entry_t const& entry, std::runtime_error const& err);
 	};
 
 	task_id next_task_id() noexcept;
 
+	queue_t m_queue;
 	task_status_t m_status;
 	std::vector<worker> m_workers;
 	std::atomic<task_id::type> m_next_task;
-	kt::async_queue<task_entry_t> m_queue;
 };
 
 // impl

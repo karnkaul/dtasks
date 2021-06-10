@@ -5,10 +5,9 @@ namespace dts {
 using namespace std::chrono_literals;
 
 scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
-	m_work.store(true);
 	m_next_stage.store(0);
-	m_thread = kt::kthread([this]() {
-		while (m_work.load()) {
+	m_thread = kt::kthread([this](kt::kthread::stop_t stop) {
+		while (!stop.stop_requested()) {
 			kt::kthread::sleep_for(1ms);
 			for (auto it = m_running.begin(); it != m_running.end();) {
 				auto const iter = std::remove_if(it->ids.begin(), it->ids.end(), [this](task_id id) { return task_status(id) >= status_t::done; });
@@ -36,11 +35,7 @@ scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
 			}
 		}
 	});
-}
-
-scheduler::~scheduler() {
-	m_work.store(false);
-	m_thread = {};
+	m_thread.m_join = kt::kthread::policy::stop;
 }
 
 scheduler::stage_id scheduler::stage(stage_t&& stage) {
