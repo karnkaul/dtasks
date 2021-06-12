@@ -89,7 +89,7 @@ class scheduler : public task_queue {
 	std::list<stage_entry_t> m_running;
 	std::atomic<stage_id::type> m_next_stage;
 	kt::kthread m_thread;
-	mutable kt::lockable_t<> m_mutex;
+	mutable std::mutex m_mutex;
 };
 
 // impl

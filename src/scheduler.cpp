@@ -19,7 +19,7 @@ scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
 					++it;
 				}
 			}
-			auto lock = m_mutex.lock();
+			std::scoped_lock lock(m_mutex);
 			for (auto it = m_waiting.begin(); it != m_waiting.end();) {
 				auto const iter = std::remove_if(it->deps.begin(), it->deps.end(), [this](stage_id id) { return m_stage_status.get(id.id) >= status_t::done; });
 				it->deps.erase(iter, it->deps.end());
@@ -45,7 +45,7 @@ scheduler::stage_id scheduler::stage(stage_t&& stage) {
 	entry.deps = std::move(stage.deps);
 	stage_id const ret = entry.id;
 	m_stage_status.set(ret.id, status_t::enqueued);
-	auto lock = m_mutex.lock();
+	std::scoped_lock lock(m_mutex);
 	m_waiting.push_back(std::move(entry));
 	return ret;
 }
@@ -65,7 +65,7 @@ bool scheduler::wait(stage_id id) {
 }
 
 void scheduler::clear() {
-	auto lock = m_mutex.lock();
+	std::scoped_lock lock(m_mutex);
 	for (auto const& stage : m_waiting) { m_stage_status.set(stage.id.id, status_t::unknown); }
 	m_waiting.clear();
 }

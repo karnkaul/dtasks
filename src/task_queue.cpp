@@ -62,7 +62,7 @@ void task_queue::wait_idle() {
 	bool idle = false;
 	while (!idle) {
 		kt::kthread::yield();
-		auto lock = m_status.mutex.lock<std::shared_lock>();
+		std::shared_lock lock(m_status.mutex);
 		idle = std::all_of(m_status.map.begin(), m_status.map.end(), [](auto const& kvp) { return kvp.second == status_t::done; });
 	}
 }

@@ -98,7 +98,7 @@ class task_queue {
 	template <typename K>
 	struct status_map {
 		std::unordered_map<K, status_t> map;
-		mutable kt::lockable_t<std::shared_mutex> mutex;
+		mutable std::shared_mutex mutex;
 
 		void set(K key, status_t value);
 		status_t get(K key) const;
@@ -131,7 +131,7 @@ class task_queue {
 
 template <typename K>
 void task_queue::status_map<K>::set(K key, status_t value) {
-	auto lock = mutex.lock<std::unique_lock>();
+	std::unique_lock lock(mutex);
 	if (value == status_t::done) {
 		map.erase(key);
 	} else {
@@ -140,13 +140,13 @@ void task_queue::status_map<K>::set(K key, status_t value) {
 }
 template <typename K>
 task_queue::status_t task_queue::status_map<K>::get(K key) const {
-	auto lock = mutex.lock<std::shared_lock>();
+	std::shared_lock lock(mutex);
 	if (auto it = map.find(key); it != map.end()) { return it->second; }
 	return status_t::done;
 }
 template <typename K>
 bool task_queue::status_map<K>::wait(K key) {
-	auto lock = mutex.lock<std::unique_lock>();
+	std::unique_lock lock(mutex);
 	auto it = map.find(key);
 	while (it != map.end() && it->second < status_t::done) {
 		lock.unlock();
