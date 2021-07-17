@@ -24,10 +24,12 @@ void task_queue::worker::run(task_status_t& out_status, task_entry_t const& entr
 	out_status.set(id.id, status_t::done);
 }
 
-void task_queue::worker::error(task_status_t& out_status, task_entry_t const& entry, std::runtime_error const& err) {
+void task_queue::worker::error(task_status_t& out_status, task_entry_t const& entry, [[maybe_unused]] std::runtime_error const& err) {
 	auto const& [id, task] = entry;
 	out_status.set(id.id, status_t::error);
+#if defined(DTASKS_CATCH_RUNTIME_ERRORS)
 	if (g_error_handler) { (*g_error_handler)(err, id.id); }
+#endif
 }
 
 task_queue::task_queue(std::uint8_t worker_count) {
@@ -50,10 +52,11 @@ task_queue::status_t task_queue::task_status(task_id id) const {
 	return m_status.get(id.id);
 }
 
-bool task_queue::task_done(task_id id) const { return task_status(id) == status_t::done; }
+bool task_queue::task_done(task_id id) const { return id.identity() || task_status(id) == status_t::done; }
 
 bool task_queue::wait(task_id id) {
-	if (id.id == 0 || id.id > m_next_task.load()) { return false; }
+	if (id.identity()) { return true; }
+	if (id.id > m_next_task.load()) { return false; }
 	return m_status.wait(id.id);
 }
 
@@ -68,8 +71,9 @@ void task_queue::wait_idle() {
 }
 
 task_id task_queue::next_task_id() noexcept {
-	++m_next_task;
-	m_status.set(m_next_task, status_t::enqueued);
-	return {m_next_task};
+	task_id ret;
+	ret.id = ++m_next_task;
+	m_status.set(ret.id, status_t::enqueued);
+	return ret;
 }
 } // namespace dts

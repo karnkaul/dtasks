@@ -4,20 +4,23 @@
 
 namespace dts {
 ///
-/// \brief Base type for handling errors (only when DTASKS_CATCH_RUNTIME_ERRORS is defined)
+/// \brief Callback type for handling errors (unused if DTASKS_CATCH_RUNTIME_ERRORS is not defined)
 ///
-struct error_handler_t {
-	///
-	/// \brief Customization point: override in derived handlers
-	///
-	virtual void operator()(std::runtime_error const& err, std::uint64_t task_id) const;
-};
+using on_err_t = void (*)(std::runtime_error const& err, std::uint64_t task_id);
+#if defined(DTASKS_CATCH_RUNTIME_ERRORS)
 ///
-/// \brief Base handler instance
+/// \brief Default error handler
 ///
-inline error_handler_t const g_default_error_handler;
+extern void on_err_default(std::runtime_error const& err, std::uint64_t task_id);
+
 ///
-/// \brief Error dispatch: set to custom derived instance / nullptr to customize
+/// \brief Error dispatch: set to custom callback / nullptr to customize
 ///
-inline error_handler_t const* g_error_handler = &g_default_error_handler;
+inline on_err_t g_error_handler = &on_err_default;
+#else
+///
+/// \brief Unused, define DTASKS_CATCH_RUNTIME_ERRORS to enable
+///
+inline on_err_t g_error_handler = nullptr;
+#endif
 } // namespace dts

@@ -4,9 +4,9 @@ set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
 project(dtasks)
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-	option(DTASKS_CATCH_RUNTIME_ERRORS ON)
+	option(DTASKS_CATCH_RUNTIME_ERRORS "Catch runtime errors" ON)
 else()
-	option(DTASKS_CATCH_RUNTIME_ERRORS OFF)
+	option(DTASKS_CATCH_RUNTIME_ERRORS "Catch runtime errors" OFF)
 endif()
 
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")

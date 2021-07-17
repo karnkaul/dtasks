@@ -15,11 +15,7 @@ class scheduler : public task_queue {
 	///
 	/// \brief Type safe ID per stage_t
 	///
-	struct stage_id {
-		using type = std::uint64_t;
-
-		type id = 0;
-	};
+	struct stage_id : detail::id_t<std::uint64_t> {};
 	///
 	/// \brief Batch of tasks and dependencies (as a stage_id each)
 	///
@@ -97,7 +93,7 @@ class scheduler : public task_queue {
 template <typename C>
 bool scheduler::stages_done(C const& container) const {
 	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, stage_id>, "Invalid type");
-	return std::all_of(std::begin(container), std::end(container), [this](auto id) { return stage_done(id); });
+	return std::all_of(std::begin(container), std::end(container), [this](auto id) { return id.identity() || stage_done(id); });
 }
 template <typename C>
 void scheduler::wait_stages(C&& container) {

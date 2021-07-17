@@ -5,24 +5,22 @@
 #include <shared_mutex>
 #include <unordered_map>
 #include <vector>
+#include <dumb_tasks/detail/id.hpp>
 #include <kt/async_queue/async_queue.hpp>
 #include <kt/kthread/kthread.hpp>
 
 namespace dts {
+constexpr bool catch_runtime_errors =
 #if defined(DTASKS_CATCH_RUNTIME_ERRORS)
-constexpr bool catch_runtime_errors = true;
+	true;
 #else
-constexpr bool catch_runtime_errors = false;
+	false;
 #endif
 
 ///
 /// \brief Type safe ID per task
 ///
-struct task_id {
-	using type = std::uint64_t;
-
-	type id = 0;
-};
+struct task_id : detail::id_t<std::uint64_t> {};
 
 ///
 /// \brief Central task manager, uses thread pool/workers and an async task queue

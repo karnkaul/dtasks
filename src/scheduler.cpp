@@ -53,14 +53,15 @@ scheduler::stage_id scheduler::stage(stage_t&& stage) {
 scheduler::stage_id scheduler::stage(stage_t const& stage) { return this->stage(stage_t(stage)); }
 
 scheduler::status_t scheduler::stage_status(stage_id id) const {
-	if (id.id == 0 || id.id > m_next_stage.load()) { return status_t::unknown; }
+	if (id.identity() || id.id > m_next_stage.load()) { return status_t::unknown; }
 	return m_stage_status.get(id.id);
 }
 
-bool scheduler::stage_done(stage_id id) const { return stage_status(id) == status_t::done; }
+bool scheduler::stage_done(stage_id id) const { return id.identity() || stage_status(id) == status_t::done; }
 
 bool scheduler::wait(stage_id id) {
-	if (id.id == 0 || id.id > m_next_stage.load()) { return false; }
+	if (id.identity()) { return true; }
+	if (id.id > m_next_stage.load()) { return false; }
 	return m_stage_status.wait(id.id);
 }
 
