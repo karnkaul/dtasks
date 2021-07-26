@@ -3,28 +3,29 @@
 #include <dumb_tasks/task_queue.hpp>
 
 namespace dts {
-task_queue::worker::worker(task_status_t* status, queue_t* queue) {
-	thread = kt::kthread([status, queue]() {
-		while (auto entry = queue->pop()) {
-			if constexpr (catch_runtime_errors) {
-				try {
-					run(*status, *entry);
-				} catch (std::runtime_error const& err) { error(*status, *entry, err); }
-			} else {
-				run(*status, *entry);
-			}
+task_queue::agent_t::agent_t(task_status_t* status, queue_t* queue, std::vector<queue_id> qids)
+	: thread([status, queue, qids = std::move(qids)]() { run(queue, status, qids); }) {}
+
+void task_queue::agent_t::run(queue_t* queue, task_status_t* status, std::vector<queue_id> const& qids) {
+	while (auto entry = queue->pop_any(qids)) {
+		if constexpr (catch_runtime_errors) {
+			try {
+				execute(*status, *entry);
+			} catch (std::runtime_error const& err) { error(*status, *entry, err); }
+		} else {
+			execute(*status, *entry);
 		}
-	});
+	}
 }
 
-void task_queue::worker::run(task_status_t& out_status, task_entry_t const& entry) {
+void task_queue::agent_t::execute(task_status_t& out_status, task_entry_t const& entry) {
 	auto const& [id, task] = entry;
 	out_status.set(id.id, status_t::executing);
 	task();
 	out_status.set(id.id, status_t::done);
 }
 
-void task_queue::worker::error(task_status_t& out_status, task_entry_t const& entry, [[maybe_unused]] std::runtime_error const& err) {
+void task_queue::agent_t::error(task_status_t& out_status, task_entry_t const& entry, [[maybe_unused]] std::runtime_error const& err) {
 	auto const& [id, task] = entry;
 	out_status.set(id.id, status_t::error);
 #if defined(DTASKS_CATCH_RUNTIME_ERRORS)
@@ -32,18 +33,19 @@ void task_queue::worker::error(task_status_t& out_status, task_entry_t const& en
 #endif
 }
 
-task_queue::task_queue(std::uint8_t worker_count) {
-	if (worker_count == 0) { worker_count = 1; }
+task_queue::task_queue(std::uint8_t agent_count) {
 	m_queue.active(true);
 	m_next_task.store(0);
-	for (std::uint8_t i = 0; i < worker_count; ++i) { m_workers.push_back(worker(&m_status, &m_queue)); }
+	for (std::uint8_t i = 0; i < agent_count; ++i) { add_agent(); }
 }
 
 task_queue::~task_queue() { m_queue.active(false); }
 
-task_id task_queue::enqueue(task_t const& task) {
+void task_queue::add_agent(std::vector<queue_id> qids) { m_agents.push_back({&m_status, &m_queue, std::move(qids)}); }
+
+task_id task_queue::enqueue(task_t const& task, queue_id qid) {
 	task_id const ret = next_task_id();
-	m_queue.push({ret, task});
+	m_queue.push({ret, task}, qid);
 	return m_queue.active() ? ret : task_id{};
 }
 

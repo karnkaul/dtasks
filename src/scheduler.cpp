@@ -4,7 +4,7 @@
 namespace dts {
 using namespace std::chrono_literals;
 
-scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
+scheduler::scheduler(std::uint8_t agent_count) : task_queue(agent_count) {
 	m_next_stage.store(0);
 	m_thread = kt::kthread([this](kt::kthread::stop_t stop) {
 		while (!stop.stop_requested()) {
@@ -25,7 +25,7 @@ scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
 				it->deps.erase(iter, it->deps.end());
 				if (it->deps.empty()) {
 					m_stage_status.set(it->id.id, status_t::executing);
-					for (auto const& task : it->tasks) { it->ids.push_back(enqueue(task)); }
+					for (auto const& task : it->tasks) { it->ids.push_back(enqueue(task, it->qid)); }
 					it->tasks.clear();
 					m_running.push_back(std::move(*it));
 					it = m_waiting.erase(it);
@@ -38,9 +38,10 @@ scheduler::scheduler(std::uint8_t worker_count) : task_queue(worker_count) {
 	m_thread.m_join = kt::kthread::policy::stop;
 }
 
-scheduler::stage_id scheduler::stage(stage_t&& stage) {
+scheduler::stage_id scheduler::stage(stage_t stage, queue_id qid) {
 	stage_entry_t entry;
 	entry.id.id = ++m_next_stage;
+	entry.qid = qid;
 	entry.tasks = std::move(stage.tasks);
 	entry.deps = std::move(stage.deps);
 	stage_id const ret = entry.id;
@@ -49,8 +50,6 @@ scheduler::stage_id scheduler::stage(stage_t&& stage) {
 	m_waiting.push_back(std::move(entry));
 	return ret;
 }
-
-scheduler::stage_id scheduler::stage(stage_t const& stage) { return this->stage(stage_t(stage)); }
 
 scheduler::status_t scheduler::stage_status(stage_id id) const {
 	if (id.identity() || id.id > m_next_stage.load()) { return status_t::unknown; }

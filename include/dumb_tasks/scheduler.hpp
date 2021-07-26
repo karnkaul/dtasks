@@ -26,22 +26,16 @@ class scheduler : public task_queue {
 
 	///
 	/// \brief Constructor
-	/// \param worker_count Number of threads and workers to create (min 1)
+	/// \param agent_count Number of threads and agents to create
 	///
-	explicit scheduler(std::uint8_t worker_count = 4);
+	explicit scheduler(std::uint8_t agent_count = 2);
 
 	///
 	/// \brief Stage a batch of tasks
 	/// \param stage Tasks to stage
 	/// \returns stage_id instance identifying this batch
 	///
-	stage_id stage(stage_t&& stage);
-	///
-	/// \brief Stage a batch of tasks
-	/// \param stage Tasks to stage
-	/// \returns stage_id instance identifying this batch
-	///
-	stage_id stage(stage_t const& stage);
+	stage_id stage(stage_t stage, queue_id qid = 0);
 
 	///
 	/// \brief Obtain status of stage_t identified by id
@@ -76,6 +70,7 @@ class scheduler : public task_queue {
 		std::vector<task_id> ids;
 		std::vector<stage_id> deps;
 		stage_id id;
+		queue_id qid{};
 	};
 
 	using stage_status_t = status_map<stage_id::type>;

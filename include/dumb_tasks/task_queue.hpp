@@ -23,10 +23,18 @@ constexpr bool catch_runtime_errors =
 struct task_id : detail::id_t<std::uint64_t> {};
 
 ///
-/// \brief Central task manager, uses thread pool/workers and an async task queue
+/// \brief Central task manager, uses thread pool/agents and an async task queue
 ///
 class task_queue {
+	using task_entry_t = std::pair<task_id, std::function<void()>>;
+	using queue_t = kt::async_queue<task_entry_t>;
+
   public:
+	///
+	/// \brief Alias for queue index
+	///
+	using queue_id = queue_t::queue_id;
+
 	///
 	/// \brief Status of a task (identified by a task_id)
 	///
@@ -44,25 +52,33 @@ class task_queue {
 
 	///
 	/// \brief Constructor
-	/// \param worker_count Number of threads and workers to create (min 1)
+	/// \param agent_count Number of threads and agents to create
 	///
-	explicit task_queue(std::uint8_t worker_count = 4);
+	explicit task_queue(std::uint8_t agent_count = 2);
 	///
 	/// \brief Destructor
 	///
 	virtual ~task_queue();
 
 	///
+	/// \brief Add a new task queue and obtain its qid
+	///
+	queue_id add_queue() { return m_queue.add_queue(); }
+	///
+	/// \brief Add a new agent that polls the given qids
+	///
+	void add_agent(std::vector<queue_id> qids = {});
+	///
 	/// \brief Enqueue a task
 	/// \param task Task to enqueue
 	/// \returns task_id instance identifying this task
 	///
-	task_id enqueue(task_t const& task);
+	task_id enqueue(task_t const& task, queue_id qid = 0);
 	///
 	/// \brief Enqueue a (sequence) container of tasks
 	///
 	template <typename C>
-	std::vector<task_id> enqueue_all(C&& container);
+	std::vector<task_id> enqueue_all(C&& container, queue_id qid = 0);
 
 	///
 	/// \brief Obtain status of task_t identified by id
@@ -87,7 +103,7 @@ class task_queue {
 	template <typename C>
 	void wait_tasks(C const& container);
 	///
-	/// \brief Wait for queue to drain and all workers to be idle
+	/// \brief Wait for queue to drain and all agents to be idle
 	/// Warning: do not enqueue tasks (on other threads) while blocked on this call!
 	///
 	void wait_idle();
@@ -104,16 +120,15 @@ class task_queue {
 	};
 
   private:
-	using task_entry_t = std::pair<task_id, task_t>;
 	using task_status_t = status_map<task_id::type>;
-	using queue_t = kt::async_queue<task_entry_t>;
 
-	struct worker {
+	struct agent_t {
 		kt::kthread thread;
 
-		worker(task_status_t* status, queue_t* queue);
+		agent_t(task_status_t* status, queue_t* queue, std::vector<queue_id> qids);
 
-		static void run(task_status_t& out_status, task_entry_t const& entry);
+		static void run(queue_t* queue, task_status_t* status, std::vector<queue_id> const& qids);
+		static void execute(task_status_t& out_status, task_entry_t const& entry);
 		static void error(task_status_t& out_status, task_entry_t const& entry, std::runtime_error const& err);
 	};
 
@@ -121,7 +136,7 @@ class task_queue {
 
 	queue_t m_queue;
 	task_status_t m_status;
-	std::vector<worker> m_workers;
+	std::vector<agent_t> m_agents;
 	std::atomic<task_id::type> m_next_task;
 };
 
@@ -159,7 +174,7 @@ bool task_queue::status_map<K>::wait(K key) {
 	return it == map.end() || it->second >= status_t::done;
 }
 template <typename C>
-std::vector<task_id> task_queue::enqueue_all(C&& container) {
+std::vector<task_id> task_queue::enqueue_all(C&& container, queue_id qid) {
 	static_assert(std::is_same_v<typename std::decay_t<C>::value_type, task_t>, "Invalid type");
 	std::vector<task_id> ret;
 	std::vector<task_entry_t> entries;
@@ -170,7 +185,7 @@ std::vector<task_id> task_queue::enqueue_all(C&& container) {
 		entries.push_back({id, task});
 		ret.push_back(id);
 	}
-	m_queue.push(std::move(entries));
+	m_queue.push(std::move(entries), qid);
 	return ret;
 }
 template <typename C>
