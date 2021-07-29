@@ -15,10 +15,9 @@ This is a "dumb simple" multi-threaded task runner and scheduler library.
 - Task scheduler (derived class) to stage batches of tasks, optionally with dependencies (pushed stages)
   - Stage ID per batch, can be used to poll status / wait for
 
-**Public KT submodules**
+### Dependencies
 
-- [`kthread`](https://github.com/karnkaul/kthread): auto-joining, moveable threads
-- [`async_queue`](https://github.com/karnkaul/async-queue): thread-safe N-producer/N-consumer queue
+- [`ktl`](https://github.com/karnkaul/ktl) (via CMake FetchContent)
 
 ### Usage
 

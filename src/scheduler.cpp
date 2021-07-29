@@ -6,9 +6,9 @@ using namespace std::chrono_literals;
 
 scheduler::scheduler(std::uint8_t agent_count) : task_queue(agent_count) {
 	m_next_stage.store(0);
-	m_thread = kt::kthread([this](kt::kthread::stop_t stop) {
+	m_thread = ktl::kthread([this](ktl::kthread::stop_t stop) {
 		while (!stop.stop_requested()) {
-			kt::kthread::sleep_for(1ms);
+			ktl::kthread::sleep_for(1ms);
 			for (auto it = m_running.begin(); it != m_running.end();) {
 				auto const iter = std::remove_if(it->ids.begin(), it->ids.end(), [this](task_id id) { return task_status(id) >= status_t::done; });
 				it->ids.erase(iter, it->ids.end());
@@ -35,7 +35,7 @@ scheduler::scheduler(std::uint8_t agent_count) : task_queue(agent_count) {
 			}
 		}
 	});
-	m_thread.m_join = kt::kthread::policy::stop;
+	m_thread.m_join = ktl::kthread::policy::stop;
 }
 
 scheduler::stage_id scheduler::stage(stage_t stage, queue_id qid) {

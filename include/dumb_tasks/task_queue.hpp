@@ -6,8 +6,8 @@
 #include <unordered_map>
 #include <vector>
 #include <dumb_tasks/detail/id.hpp>
-#include <kt/async_queue/async_queue.hpp>
-#include <kt/kthread/kthread.hpp>
+#include <ktl/async_queue.hpp>
+#include <ktl/kthread.hpp>
 
 namespace dts {
 constexpr bool catch_runtime_errors =
@@ -27,7 +27,7 @@ struct task_id : detail::id_t<std::uint64_t> {};
 ///
 class task_queue {
 	using task_entry_t = std::pair<task_id, std::function<void()>>;
-	using queue_t = kt::async_queue<task_entry_t>;
+	using queue_t = ktl::async_queue<task_entry_t>;
 
   public:
 	///
@@ -123,7 +123,7 @@ class task_queue {
 	using task_status_t = status_map<task_id::type>;
 
 	struct agent_t {
-		kt::kthread thread;
+		ktl::kthread thread;
 
 		agent_t(task_status_t* status, queue_t* queue, std::vector<queue_id> qids);
 
@@ -163,7 +163,7 @@ bool task_queue::status_map<K>::wait(K key) {
 	auto it = map.find(key);
 	while (it != map.end() && it->second < status_t::done) {
 		lock.unlock();
-		kt::kthread::yield();
+		ktl::kthread::yield();
 		lock.lock();
 		it = map.find(key);
 	}

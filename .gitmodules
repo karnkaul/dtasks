@@ -1,6 +1,0 @@
-[submodule "include/kt/kthread"]
-	path = include/kt/kthread
-	url = https://github.com/karnkaul/kthread
-[submodule "include/kt/async_queue"]
-	path = include/kt/async_queue
-	url = https://github.com/karnkaul/async-queue
