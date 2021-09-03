@@ -10,8 +10,7 @@ This is a "dumb simple" multi-threaded task runner and scheduler library.
   - Configurable thread / worker count
   - Async queue using condition variable: workers sleep as long as queue remains empty
   - Task ID per enqueued task, can be used to poll status / wait for
-  - `#define DTASKS_CATCH_RUNTIME_ERRORS` to enable runtime error handling (on by default in `Debug`)
-  - Customizable error handler (logs `what()` to `std::cerr` by default)
+  - Thrown exceptions stored, can be queried / rethrown on any desired thread
 - Task scheduler (derived class) to stage batches of tasks, optionally with dependencies (pushed stages)
   - Stage ID per batch, can be used to poll status / wait for
 

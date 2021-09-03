@@ -3,19 +3,13 @@ set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "")
 
 project(dtasks)
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-	option(DTASKS_CATCH_RUNTIME_ERRORS "Catch runtime errors" ON)
-else()
-	option(DTASKS_CATCH_RUNTIME_ERRORS "Catch runtime errors" OFF)
-endif()
-
 # ktl
 include(FetchContent)
 set(FETCHCONTENT_QUIET OFF)
 FetchContent_Declare(
 	ktl
 	GIT_REPOSITORY https://github.com/karnkaul/ktl
-	GIT_TAG origin/main
+	GIT_TAG 4247b26
 	GIT_SHALLOW ON
 )
 FetchContent_MakeAvailable(ktl)
@@ -26,7 +20,6 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${INCLUDES} ${SOURCES})
 
 add_library(dtasks ${INCLUDES} ${SOURCES})
 add_library(dtasks::dtasks ALIAS dtasks)
-target_compile_definitions(dtasks PUBLIC $<$<BOOL:${DTASKS_CATCH_RUNTIME_ERRORS}>:DTASKS_CATCH_RUNTIME_ERRORS>)
 target_compile_features(dtasks PUBLIC cxx_std_17)
 target_include_directories(dtasks PUBLIC include)
 target_link_libraries(dtasks PUBLIC ktl::ktl)

@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <dumb_tasks/error_handler.hpp>
 #include <dumb_tasks/task_queue.hpp>
 
 namespace dts {
@@ -8,12 +7,12 @@ task_queue::agent_t::agent_t(task_status_t* status, queue_t* queue, std::vector<
 
 void task_queue::agent_t::run(queue_t* queue, task_status_t* status, std::vector<queue_id> const& qids) {
 	while (auto entry = queue->pop_any(qids)) {
-		if constexpr (catch_runtime_errors) {
-			try {
-				execute(*status, *entry);
-			} catch (std::runtime_error const& err) { error(*status, *entry, err); }
-		} else {
+		try {
 			execute(*status, *entry);
+		} catch (...) {
+			error(*status, *entry);
+			ktl::tlock lock(eptr);
+			if (!*lock) { *lock = std::current_exception(); }
 		}
 	}
 }
@@ -25,12 +24,9 @@ void task_queue::agent_t::execute(task_status_t& out_status, task_entry_t const&
 	out_status.set(id.id, status_t::done);
 }
 
-void task_queue::agent_t::error(task_status_t& out_status, task_entry_t const& entry, [[maybe_unused]] std::runtime_error const& err) {
+void task_queue::agent_t::error(task_status_t& out_status, task_entry_t const& entry) {
 	auto const& [id, task] = entry;
 	out_status.set(id.id, status_t::error);
-#if defined(DTASKS_CATCH_RUNTIME_ERRORS)
-	if (g_error_handler) { (*g_error_handler)(err, id.id); }
-#endif
 }
 
 task_queue::task_queue(std::uint8_t agent_count) {
@@ -71,6 +67,15 @@ void task_queue::wait_idle() {
 		idle = std::all_of(m_status.map.begin(), m_status.map.end(), [](auto const& kvp) { return kvp.second == status_t::done; });
 	}
 }
+
+bool task_queue::has_exception() const { return ktl::tlock(agent_t::eptr).get() != nullptr; }
+
+void task_queue::rethrow() {
+	ktl::tlock lock(agent_t::eptr);
+	if (*lock) { std::rethrow_exception(*lock); }
+}
+
+void task_queue::clear_exception() { ktl::tlock(agent_t::eptr).get() = {}; }
 
 task_id task_queue::next_task_id() noexcept {
 	task_id ret;

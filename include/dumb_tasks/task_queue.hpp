@@ -8,15 +8,9 @@
 #include <dumb_tasks/detail/id.hpp>
 #include <ktl/async_queue.hpp>
 #include <ktl/kthread.hpp>
+#include <ktl/tmutex.hpp>
 
 namespace dts {
-constexpr bool catch_runtime_errors =
-#if defined(DTASKS_CATCH_RUNTIME_ERRORS)
-	true;
-#else
-	false;
-#endif
-
 ///
 /// \brief Type safe ID per task
 ///
@@ -108,6 +102,19 @@ class task_queue {
 	///
 	void wait_idle();
 
+	///
+	/// \brief Check if a task threw an exception (only first thrown is stored as std::exception_ptr)
+	///
+	bool has_exception() const;
+	///
+	/// \brief Rethrow a stored std::exception_ptr, if not empty
+	///
+	void rethrow();
+	///
+	/// \brief Clear stored std::exception_ptr
+	///
+	void clear_exception();
+
   protected:
 	template <typename K>
 	struct status_map {
@@ -123,13 +130,15 @@ class task_queue {
 	using task_status_t = status_map<task_id::type>;
 
 	struct agent_t {
+		inline static ktl::strict_tmutex<std::exception_ptr> eptr;
+
 		ktl::kthread thread;
 
 		agent_t(task_status_t* status, queue_t* queue, std::vector<queue_id> qids);
 
 		static void run(queue_t* queue, task_status_t* status, std::vector<queue_id> const& qids);
 		static void execute(task_status_t& out_status, task_entry_t const& entry);
-		static void error(task_status_t& out_status, task_entry_t const& entry, std::runtime_error const& err);
+		static void error(task_status_t& out_status, task_entry_t const& entry);
 	};
 
 	task_id next_task_id() noexcept;
