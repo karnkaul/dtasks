@@ -1,6 +1,6 @@
 #pragma once
-#include <list>
 #include <dumb_tasks/task_queue.hpp>
+#include <list>
 
 namespace dts {
 ///

@@ -1,14 +1,15 @@
 #pragma once
-#include <atomic>
-#include <cstdint>
-#include <functional>
-#include <shared_mutex>
-#include <unordered_map>
-#include <vector>
 #include <dumb_tasks/detail/id.hpp>
 #include <ktl/async_queue.hpp>
 #include <ktl/kthread.hpp>
+#include <ktl/move_only_function.hpp>
 #include <ktl/tmutex.hpp>
+#include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <shared_mutex>
+#include <unordered_map>
+#include <vector>
 
 namespace dts {
 ///
@@ -20,7 +21,7 @@ struct task_id : detail::id_t<std::uint64_t> {};
 /// \brief Central task manager, uses thread pool/agents and an async task queue
 ///
 class task_queue {
-	using task_entry_t = std::pair<task_id, std::function<void()>>;
+	using task_entry_t = std::pair<task_id, ktl::move_only_function<void()>>;
 	using queue_t = ktl::async_queue<task_entry_t>;
 
   public:
@@ -42,7 +43,7 @@ class task_queue {
 	///
 	/// \brief Alias for tasks
 	///
-	using task_t = std::function<void()>;
+	using task_t = ktl::move_only_function<void()>;
 
 	///
 	/// \brief Constructor
@@ -67,7 +68,7 @@ class task_queue {
 	/// \param task Task to enqueue
 	/// \returns task_id instance identifying this task
 	///
-	task_id enqueue(task_t const& task, queue_id qid = 0);
+	task_id enqueue(task_t&& task, queue_id qid = 0);
 	///
 	/// \brief Enqueue a (sequence) container of tasks
 	///

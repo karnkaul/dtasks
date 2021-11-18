@@ -1,5 +1,5 @@
-#include <algorithm>
 #include <dumb_tasks/task_queue.hpp>
+#include <algorithm>
 
 namespace dts {
 task_queue::agent_t::agent_t(task_status_t* status, queue_t* queue, std::vector<queue_id> qids)
@@ -39,9 +39,9 @@ task_queue::~task_queue() { m_queue.active(false); }
 
 void task_queue::add_agent(std::vector<queue_id> qids) { m_agents.push_back({&m_status, &m_queue, std::move(qids)}); }
 
-task_id task_queue::enqueue(task_t const& task, queue_id qid) {
+task_id task_queue::enqueue(task_t&& task, queue_id qid) {
 	task_id const ret = next_task_id();
-	m_queue.push({ret, task}, qid);
+	m_queue.push({ret, std::move(task)}, qid);
 	return m_queue.active() ? ret : task_id{};
 }
 

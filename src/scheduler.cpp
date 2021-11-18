@@ -1,5 +1,5 @@
-#include <algorithm>
 #include <dumb_tasks/scheduler.hpp>
+#include <algorithm>
 
 namespace dts {
 using namespace std::chrono_literals;
@@ -25,7 +25,7 @@ scheduler::scheduler(std::uint8_t agent_count) : task_queue(agent_count) {
 				it->deps.erase(iter, it->deps.end());
 				if (it->deps.empty()) {
 					m_stage_status.set(it->id.id, status_t::executing);
-					for (auto const& task : it->tasks) { it->ids.push_back(enqueue(task, it->qid)); }
+					for (auto& task : it->tasks) { it->ids.push_back(enqueue(std::move(task), it->qid)); }
 					it->tasks.clear();
 					m_running.push_back(std::move(*it));
 					it = m_waiting.erase(it);
