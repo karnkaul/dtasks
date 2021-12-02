@@ -9,8 +9,7 @@ set(FETCHCONTENT_QUIET OFF)
 FetchContent_Declare(
 	ktl
 	GIT_REPOSITORY https://github.com/karnkaul/ktl
-	GIT_TAG def383c
-	GIT_SHALLOW ON
+	GIT_TAG 728a4ad
 )
 FetchContent_MakeAvailable(ktl)
 
