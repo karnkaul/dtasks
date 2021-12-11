@@ -26,7 +26,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
   target_compile_options(${PROJECT_NAME} PRIVATE -Wextra -Wall -Werror=return-type $<$<NOT:$<CONFIG:Debug>>:-Werror>)
 endif()
 
-add_subdirectory(include/dumb_tasks)
+target_sources(${PROJECT_NAME} PRIVATE
+  include/dumb_tasks/detail/id.hpp
+  include/dumb_tasks/scheduler.hpp
+  include/dumb_tasks/task_queue.hpp
+)
 add_subdirectory(src)
 get_target_property(sources ${PROJECT_NAME} SOURCES)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${sources})
