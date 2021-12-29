@@ -1,0 +1,6 @@
+#pragma once
+#include <string_view>
+
+namespace dtasks {
+constexpr std::string_view version = "@dtasks_version@";
+}

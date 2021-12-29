@@ -10,8 +10,9 @@ configuration:
 install:
   - cmd: cmake -G "Visual Studio 16 2019" .
   - sh: |
-      sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-9 30
-      sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-9 30
+      echo "== Installing dependencies ==" && sudo apt -qq update && sudo apt -qq install -y gcc-10 g++-10
+      sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-10 30
+      sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-10 30
       cmake -DCMAKE_BUILD_TYPE=$CONFIGURATION .
 for:
   - matrix:

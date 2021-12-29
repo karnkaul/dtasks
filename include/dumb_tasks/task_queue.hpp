@@ -1,9 +1,9 @@
 #pragma once
 #include <dumb_tasks/detail/id.hpp>
-#include <ktl/async_queue.hpp>
-#include <ktl/kthread.hpp>
-#include <ktl/move_only_function.hpp>
-#include <ktl/tmutex.hpp>
+#include <ktl/async/async_queue.hpp>
+#include <ktl/async/kfunction.hpp>
+#include <ktl/async/kmutex.hpp>
+#include <ktl/async/kthread.hpp>
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
@@ -21,7 +21,7 @@ struct task_id : detail::id_t<std::uint64_t> {};
 /// \brief Central task manager, uses thread pool/agents and an async task queue
 ///
 class task_queue {
-	using task_entry_t = std::pair<task_id, ktl::move_only_function<void()>>;
+	using task_entry_t = std::pair<task_id, ktl::kfunction<void()>>;
 	using queue_t = ktl::async_queue<task_entry_t>;
 
   public:
@@ -43,7 +43,7 @@ class task_queue {
 	///
 	/// \brief Alias for tasks
 	///
-	using task_t = ktl::move_only_function<void()>;
+	using task_t = ktl::kfunction<void()>;
 
 	///
 	/// \brief Constructor

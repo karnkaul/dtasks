@@ -10,7 +10,6 @@ struct id_t {
 
 	constexpr bool identity() const noexcept { return id == zero; }
 
-	friend constexpr bool operator==(id_t const& lhs, id_t const& rhs) noexcept { return lhs.id == rhs.id; }
-	friend constexpr bool operator!=(id_t const& lhs, id_t const& rhs) noexcept { return !(lhs == rhs); }
+	constexpr bool operator==(id_t const&) const = default;
 };
 } // namespace dts::detail

@@ -23,7 +23,7 @@ This is a "dumb simple" multi-threaded task runner and scheduler library.
 **Requirements**
 
 - CMake
-- C++17 compiler (and stdlib)
+- C++20 compiler (and stdlib)
 
 **Steps**
 

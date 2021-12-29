@@ -11,7 +11,7 @@ void task_queue::agent_t::run(queue_t* queue, task_status_t* status, std::vector
 			execute(*status, *entry);
 		} catch (...) {
 			error(*status, *entry);
-			ktl::tlock lock(eptr);
+			ktl::klock lock(eptr);
 			if (!*lock) { *lock = std::current_exception(); }
 		}
 	}
@@ -68,14 +68,14 @@ void task_queue::wait_idle() {
 	}
 }
 
-bool task_queue::has_exception() const { return ktl::tlock(agent_t::eptr).get() != nullptr; }
+bool task_queue::has_exception() const { return ktl::klock(agent_t::eptr).get() != nullptr; }
 
 void task_queue::rethrow() {
-	ktl::tlock lock(agent_t::eptr);
+	ktl::klock lock(agent_t::eptr);
 	if (*lock) { std::rethrow_exception(*lock); }
 }
 
-void task_queue::clear_exception() { ktl::tlock(agent_t::eptr).get() = {}; }
+void task_queue::clear_exception() { ktl::klock(agent_t::eptr).get() = {}; }
 
 task_id task_queue::next_task_id() noexcept {
 	task_id ret;
