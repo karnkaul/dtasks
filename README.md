@@ -1,6 +1,6 @@
 ## Dumb Task Scheduler
 
-[![Build status](https://ci.appveyor.com/api/projects/status/kgxf74qofu7mfc92?svg=true)](https://ci.appveyor.com/project/karnkaul/dtasks)
+[![Build Status](https://github.com/karnkaul/dtasks/actions/workflows/ci.yml/badge.svg)](https://github.com/karnkaul/dtasks/actions/workflows/ci.yml)
 
 This is a "dumb simple" multi-threaded task runner and scheduler library.
 
