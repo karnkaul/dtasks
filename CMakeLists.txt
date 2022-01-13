@@ -22,7 +22,7 @@ set(FETCHCONTENT_QUIET OFF)
 FetchContent_Declare(
   ktl
   GIT_REPOSITORY https://github.com/karnkaul/ktl
-  GIT_TAG 378651d
+  GIT_TAG 5278a75
 )
 if(DTASKS_INSTALL)
   if(NOT "${KTL_INSTALL}" STREQUAL "" AND NOT "${KTL_INSTALL}")
