@@ -22,7 +22,7 @@ set(FETCHCONTENT_QUIET OFF)
 FetchContent_Declare(
   ktl
   GIT_REPOSITORY https://github.com/karnkaul/ktl
-  GIT_TAG 5278a75
+  GIT_TAG ffefa4c
 )
 if(DTASKS_INSTALL)
   if(NOT "${KTL_INSTALL}" STREQUAL "" AND NOT "${KTL_INSTALL}")
@@ -69,10 +69,11 @@ get_target_property(sources ${project_name} SOURCES)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${sources})
 
 # version
-if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}_version.hpp.in")
-  message(STATUS "Configuring ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}_version.hpp")
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}_version.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/${PROJECT_NAME}_version.hpp")
-  source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}" FILES "${CMAKE_CURRENT_BINARY_DIR}/include/${PROJECT_NAME}/${PROJECT_NAME}_version.hpp")
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/dtasks_version.hpp.in")
+  set(version_dst "${CMAKE_CURRENT_BINARY_DIR}/include/dumb_tasks/dtasks_version.hpp")
+  message(STATUS "Configuring ${version_dst}")
+  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/src/dtasks_version.hpp.in" "${version_dst}")
+  source_group(TREE "${CMAKE_CURRENT_BINARY_DIR}" FILES "${version_dst}")
 endif()
 
 # install and export
