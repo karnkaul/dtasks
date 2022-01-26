@@ -1,86 +1,64 @@
-## Dumb Task Scheduler
+# Dumb Task Scheduler
 
 [![Build Status](https://github.com/karnkaul/dtasks/actions/workflows/ci.yml/badge.svg)](https://github.com/karnkaul/dtasks/actions/workflows/ci.yml)
 
 This is a "dumb simple" multi-threaded task runner and scheduler library.
 
-### Features
+## Features
 
-- Task queue to push flat callables into
-  - Configurable thread / worker count
-  - Async queue using condition variable: workers sleep as long as queue remains empty
-  - Task ID per enqueued task, can be used to poll status / wait for
-  - Thrown exceptions stored, can be queried / rethrown on any desired thread
-- Task scheduler (derived class) to stage batches of tasks, optionally with dependencies (pushed stages)
-  - Stage ID per batch, can be used to poll status / wait for
+- Thread pool with configurable thread count
+- Executor to enqueue and schedule tasks
+  - Enqueue task, obtain future
+  - Schedule a number of tasks after a number of associated dependencies (futures) have been completed (signalled)
+- Rethrow the first exception caught, if any
+- Stop/restart execution and queue at any time
 
-### Dependencies
+## Dependencies
 
 - [`ktl`](https://github.com/karnkaul/ktl) (via CMake FetchContent)
 
-### Usage
+## Usage
 
-**Requirements**
+### Requirements
 
 - CMake
 - C++20 compiler (and stdlib)
 
-**Steps**
+### Steps
 
 1. Clone repo to appropriate subdirectory, say `dumb_tasks`
 1. Add library to project via: `add_subdirectory(dumb_tasks)` and `target_link_libraries(foo dtasks::dtasks)`
-1. Use via: `#include <dumb_tasks/scheduler.hpp>` or `#include <dumb_tasks/task_queue.hpp>` (if scheduling / dependencies are not needed)
+1. Use via: `#include <dumb_tasks/executor.hpp>`
 
 **Example**
 
-`dts::task_queue` is a flat async queue of tasks which are consumed by a fixed number of worker threads.
-
-`dts::scheduler` derives from `dts::task_queue` and provides the ability to enqueue batches of tasks in a "stage", with optional dependencies (as obtained `stage_id`s). A staged batch of tasks waits for all its dependencies to be in the `done` (or `error`) state(s), and is then added to the task queue.
-
 ```cpp
-#include <array>
-#include <chrono>
-#include <random>
-#include <dumb_tasks/task_queue.hpp>
-#include <dumb_tasks/scheduler.hpp>
-
-using namespace std::chrono;
+#include <dumb_tasks/executor.hpp>
+#include <ktl/stack_string.hpp>
+#include <iostream>
+#include <vector>
 
 int main() {
-  static std::default_random_engine engine(std::random_device{}());
-  static std::uniform_int_distribution<> dist(0, 30);
-  auto const foo = [](std::size_t x) {
-    std::this_thread::sleep_for(milliseconds(dist(engine)));
-    std::string str("x = ");
-    str += std::to_string(x);
-    str += "\n";
-    std::cout << str;
-  };
-  {
-    // task queue
-    dts::task_queue queue;
-    std::array<dts::task_id, count> ids;
-    for (std::size_t i = 0; i < 16; ++i) {
-      ids[i] = queue.enqueue([i, &foo]() { foo(i); });
-    }
-    queue.wait_tasks(ids);
+  dts::thread_pool pool;
+  dts::executor executor(&pool);
+  std::vector<dts::future_t> futures;
+  int n{};
+  for (int i = 0; i < 5; ++i) {
+    auto future = executor.enqueue([n] { std::cout << ktl::stack_string<4>("{} ", n).get(); });
+    futures.push_back(std::move(future));
+    ++n;
   }
-  {
-    // task scheduler
-    dts::scheduler scheduler;
-    std::array<dts::scheduler::stage_id, 4> ids;
-    for (std::size_t i = 0; i < 4; ++i) {
-      dts::scheduler::stage_t stage;
-      for (std::size_t j = 0; j < 4; ++j) {
-        stage.tasks.push_back([i, j, &foo]() { foo(5 * i + j); });
-      }
-      if (i > 0) {
-        stage.deps = {ids[i - 1]};
-      }
-      ids[i] = scheduler.stage(stage);
-    }
-    scheduler.wait(ids.back());
+  n = 50;
+  std::vector<dts::task_t> tasks;
+  for (int i = 0; i < 5; ++i) {
+    auto task = [n]() { std::cout << ktl::stack_string<4>("{} ", n).get(); };
+    tasks.push_back(task);
+    ++n;
   }
+  auto future = executor.schedule(tasks, futures);
+  future.wait(); 
+  std::cout.flush();
+  // potential output: 1 0 2 3 4 50 52 51 53 54
 }
 ```
 
