@@ -26,7 +26,7 @@ set(FETCHCONTENT_QUIET OFF)
 FetchContent_Declare(
   ktl
   GIT_REPOSITORY https://github.com/karnkaul/ktl
-  GIT_TAG 96a2188
+  GIT_TAG 9db001b
 )
 
 if(DTASKS_INSTALL)
